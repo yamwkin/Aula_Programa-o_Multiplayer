@@ -5,39 +5,52 @@ using Fusion;
 
 public class MovimentoController : NetworkBehaviour
 {
-    public CharacterController characterController;
-    public float velocidade = 4f;
+    private CharacterController characterController;
+    public float velocidade = 5f;
     public Animator animator;
+
+    [Networked] public int Score { get; set; }
+
+    [Rpc(RpcSources.All, RpcTargets.StateAuthority)]
+    public void RPC_AddScore(int points)
+    {
+        Score += points;
+    }
+
 
     public void Awake()
     {
         characterController = GetComponent<CharacterController>();
     }
-
     public override void FixedUpdateNetwork()
     {
         if (HasStateAuthority)
         {
             float horizontal = Input.GetAxis("Horizontal");
-			float vertical = Input.GetAxis("Vertical");
+            float vertical = Input.GetAxis("Vertical");
 
-            #region 1 forma de movimentacao
-            //Vector3 direcao = new Vector3 (horizontal, 0, vertical);
-            //if (direcao.magnitude > 0.1f)
-            //{
-            //    characterController.Move(direcao * velocidade * Runner.DeltaTime); // movimento do personagem
-            //    transform.rotation = Quaternion.LookRotation(direcao); // rotacao do personagem
-            #endregion
-
-                #region 2 forma de movimentacao 
-                //movimentacao do personagem
-                characterController.Move(transform.forward * vertical * velocidade * Runner.DeltaTime);
-
-                //rotacao do personagem
-                float velocidadeRotacao = velocidade * 50f;
-                transform.Rotate(new Vector3(0, horizontal * velocidade * Runner.DeltaTime, 0));
+            Vector3 direcao = new Vector3(horizontal, 0, vertical);
+            if (direcao.magnitude > 0.1f)
+            {
+                #region 1ª forma de movimentação
+                ////movimento do personagem
+                //characterController.Move(direcao * velocidade * Runner.DeltaTime);
+                ////rotacao do personagem
+                //transform.rotation = Quaternion.LookRotation(direcao);
                 #endregion
 
+                #region 2ª forma de movimentação
+                //movimento do personagem
+                characterController.Move(
+                    transform.forward * vertical * velocidade * Runner.DeltaTime);
+                //rotacao do personagem
+                float velocidadeRotacao = velocidade * 50f;
+                transform.Rotate(new Vector3(0,
+                    horizontal * velocidadeRotacao * Runner.DeltaTime,
+                    0));
+                #endregion
+
+                //animacao do personagem
                 animator.SetBool("PodeAndar", true);
             }
             else
@@ -45,9 +58,9 @@ public class MovimentoController : NetworkBehaviour
                 animator.SetBool("PodeAndar", false);
             }
 
-            
-	}
 
+        }
+    }
 
-	}
+}
 
